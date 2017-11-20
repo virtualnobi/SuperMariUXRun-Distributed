@@ -11,19 +11,20 @@ from __future__ import print_function
 import logging
 from datetime import datetime
 # import gettext
-# import os.path
+import os.path
 ## Contributed
 import wx
 import wx.lib.scrolledpanel
+import wx.animate
 ## nobi
 from nobi.ObserverPattern import Observer
 ## Project
 from model.PushSensor import PushSensor
+import UI  # to access UI.PackagePath
 
 
 
 # # Internationalization  # requires "PackagePath = UI/__path__[0]" in _init_.py
-# import UI  # to access UI.PackagePath
 # try:
 #     LocalesPath = os.path.join(UI.PackagePath, '..', 'locale')
 #     Translation = gettext.translation('MediaFiler', LocalesPath)
@@ -76,10 +77,20 @@ class PushSensorView(wx.Panel, Observer):
         # internal state
         self.model = aPushSensor
         self.model.addObserverForAspect(self, PushSensor.AspectStateChanged)
-        s = wx.GridBagSizer(4, 2)
+        self.ImageLEDOn = wx.Image(os.path.join(UI.PackagePath, 'led_on.jpg'), wx.BITMAP_TYPE_JPEG).ConvertToBitmap()
+        self.ImageLEDOff =  wx.Image(os.path.join(UI.PackagePath, 'led_off.jpg'), wx.BITMAP_TYPE_JPEG).ConvertToBitmap()
+#         self.fireworks = wx.animate.Animation(os.path.join(UI.PackagePath, 'smallFireworks.gif'))
+        # layout view
+        s = wx.GridBagSizer(vgap=10, hgap=10)
         s.Add(wx.StaticText(self, -1, self.model.getName()), (0,0))
+        self.ledView = wx.StaticBitmap(self, -1, self.ImageLEDOff)
+        s.Add(self.ledView, (0, 1))
         self.stateText = wx.StaticText(self, -1, self.model.getState())
         s.Add(self.stateText, (1, 0))
+#         self.fireworksView = wx.animate.AnimationCtrl(self, -1, self.fireworks)
+#         self.fireworksView.SetUseWindowBackgroundColour()
+#         self.fireworksView.Play()
+#         s.Add(self.fireworksView, (1, 1), (1, 1))
         self.pushButton = wx.Button(self, -1, 'Push')
         self.Bind(wx.EVT_BUTTON, self.onPush, self.pushButton)
         s.Add(self.pushButton, (2, 0), (1, 2))
@@ -113,11 +124,17 @@ class PushSensorView(wx.Panel, Observer):
         if (aspect == PushSensor.AspectStateChanged):
             self.stateText.SetLabel(observable.getState())
             if (observable.getState() == PushSensor.StateIdle):
-                pass
+                self.ledView.SetBitmap(self.ImageLEDOff)
+#                 self.GetSizer().Hide(self.fireworksView)
+#                 self.GetSizer().Layout()
             elif (observable.getState() == PushSensor.StatePushed):
-                pass
+                self.ledView.SetBitmap(self.ImageLEDOn)
+#                 self.GetSizer().Hide(self.fireworksView)
+#                 self.GetSizer().Layout()
             elif (observable.getState() == PushSensor.StateFinished):
-                pass
+                self.ledView.SetBitmap(self.ImageLEDOff)
+#                 self.GetSizer().Show(self.fireworksView)
+#                 self.GetSizer().Layout()
             else:
                 assert False, ('Illegal state in PushSensor %s' % observable.getName())
 
