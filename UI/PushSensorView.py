@@ -78,26 +78,35 @@ class PushSensorView(wx.Panel, Observer):
         self.model = aPushSensor
         self.model.addObserverForAspect(self, PushSensor.AspectStateChanged)
         self.ImageLEDOn = wx.Image(os.path.join(UI.PackagePath, 'led_on.jpg'), wx.BITMAP_TYPE_JPEG).ConvertToBitmap()
-        self.ImageLEDOff =  wx.Image(os.path.join(UI.PackagePath, 'led_off.jpg'), wx.BITMAP_TYPE_JPEG).ConvertToBitmap()
-#         self.fireworks = wx.animate.Animation(os.path.join(UI.PackagePath, 'smallFireworks.gif'))
+        self.ImageLEDOff = wx.Image(os.path.join(UI.PackagePath, 'led_off.jpg'), wx.BITMAP_TYPE_JPEG).ConvertToBitmap()
+        self.ImageFireworks = wx.Image(os.path.join(UI.PackagePath, 'fireworks.jpg'), wx.BITMAP_TYPE_JPEG).ConvertToBitmap()
+#        self.fireworks = wx.animate.Animation(os.path.join(UI.PackagePath, 'smallFireworks.gif'))
+#        self.stateVisualization = None
         # layout view
+        self.outOfSightSizer = wx.BoxSizer()  
         s = wx.GridBagSizer(vgap=10, hgap=10)
-        s.Add(wx.StaticText(self, -1, self.model.getName()), (0,0))
-        self.ledView = wx.StaticBitmap(self, -1, self.ImageLEDOff)
-        s.Add(self.ledView, (0, 1))
-        self.stateText = wx.StaticText(self, -1, self.model.getState())
-        s.Add(self.stateText, (1, 0))
+        s.Add((1, 130), (2, 0))
+        s.Add((130, 1), (0, 2))
+        s.Add((1, 1), (5, 3))
+        s.Add(wx.StaticText(self, -1, self.model.getName()), (1,1))
+        self.stateView = wx.StaticBitmap(self, -1, self.ImageLEDOff)
+        s.Add(self.stateView, (1, 2), (2, 1))
+#         self.outOfSightSizer.Add(self.ledView)
+        self.stateText = wx.StaticText(self, -1, '')
+        s.Add(self.stateText, (2, 1))
 #         self.fireworksView = wx.animate.AnimationCtrl(self, -1, self.fireworks)
 #         self.fireworksView.SetUseWindowBackgroundColour()
 #         self.fireworksView.Play()
-#         s.Add(self.fireworksView, (1, 1), (1, 1))
+#         self.outOfSightSizer.Add(self.fireworksView)
         self.pushButton = wx.Button(self, -1, 'Push')
         self.Bind(wx.EVT_BUTTON, self.onPush, self.pushButton)
-        s.Add(self.pushButton, (2, 0), (1, 2))
+        s.Add(self.pushButton, (3, 1), (1, 2), wx.EXPAND)
         logPane = wx.lib.scrolledpanel.ScrolledPanel(self, -1)
         self.logText = wx.StaticText(logPane, -1, '(empty log)')
-        s.Add(logPane, (3, 0), (1, 2))
+        s.Add(logPane, (4, 1), (1, 2))
         self.SetSizer(s)
+        # 
+        self.updateAspect(self.model, PushSensor.AspectStateChanged)
 
 
 
@@ -123,18 +132,49 @@ class PushSensorView(wx.Panel, Observer):
         """
         if (aspect == PushSensor.AspectStateChanged):
             self.stateText.SetLabel(observable.getState())
+#             if (self.stateVisualization):
+#                 self.stateVisualization.Destroy()
             if (observable.getState() == PushSensor.StateIdle):
-                self.ledView.SetBitmap(self.ImageLEDOff)
-#                 self.GetSizer().Hide(self.fireworksView)
-#                 self.GetSizer().Layout()
+#                 self.stateVisualization = wx.StaticBitmap(self, -1, self.ImageLEDOff)
+#                 self.GetSizer().Add(self.stateVisualization, (1, 2))
+#                 if (self.GetSizer().FindItemAtPosition((1, 2)) == self.fireworksView):
+#                     self.GetSizer().Detach(self.fireworksView)
+#                     self.outOfSightSizer.Add(self.fireworksView)
+#                     self.outOfSightSizer.Detach(self.ledView)
+#                     self.GetSizer().Add(self.ledView, (1, 2))
+                self.stateView.SetBitmap(self.ImageLEDOff)
+#                 self.ledView.Show()
+#                self.GetSizer().Hide(self.fireworksView)
+#                 self.fireworksView.Hide()
+                self.GetSizer().Layout()
             elif (observable.getState() == PushSensor.StatePushed):
-                self.ledView.SetBitmap(self.ImageLEDOn)
+#                 self.stateVisualization = wx.StaticBitmap(self, -1, self.ImageLEDOn)
+#                 self.GetSizer().Add(self.stateVisualization, (1, 2))
+#                 if (self.GetSizer().FindItemAtPosition((1, 2)) == self.fireworksView):
+#                     self.GetSizer().Detach(self.fireworksView)
+#                     self.outOfSightSizer.Add(self.fireworksView)
+#                     self.outOfSightSizer.Detach(self.ledView)
+#                     self.GetSizer().Add(self.ledView, (1, 2))
+                self.stateView.SetBitmap(self.ImageLEDOn)
+#                 self.ledView.Show()
 #                 self.GetSizer().Hide(self.fireworksView)
-#                 self.GetSizer().Layout()
+#                 self.fireworksView.Hide()
+                self.GetSizer().Layout()
             elif (observable.getState() == PushSensor.StateFinished):
-                self.ledView.SetBitmap(self.ImageLEDOff)
-#                 self.GetSizer().Show(self.fireworksView)
-#                 self.GetSizer().Layout()
+#                 self.stateVisualization = wx.animate.AnimationCtrl(self, -1, self.fireworks)
+#                 self.stateVisualization.SetUseWindowBackgroundColour()
+#                 self.stateVisualization.Play()
+#                 self.GetSizer().Add(self.stateVisualization, (1, 2))
+#                 if (self.GetSizer().FindItemAtPosition((1, 2)) == self.ledView):
+#                     self.GetSizer().Detach(self.ledView)
+#                     self.outOfSightSizer.Add(self.ledView)
+#                     self.outOfSightSizer.Detach(self.fireworksView)
+#                     self.GetSizer().Add(self.fireworksView, (1, 2))
+#                 self.ledView.Hide()
+                self.stateView.SetBitmap(self.ImageFireworks)
+#                self.GetSizer().Show(self.fireworksView)
+#                 self.fireworksView.Show()
+                self.GetSizer().Layout()
             else:
                 assert False, ('Illegal state in PushSensor %s' % observable.getName())
 

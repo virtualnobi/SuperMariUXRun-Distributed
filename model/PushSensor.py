@@ -60,8 +60,8 @@ class PushSensor(Observable):
     MessageConfirm = 'confirm'  # sent to successor to indicate it's still "pushed", triggers final blinking
 
     # Timings
-    StayPushedDuration = 1  # how long sensor will stay in 'pushed' state before going 'idle', in seconds
-    StayFinishedDuration = 2  # how long sensor will stay in 'finished' state before going 'idle', in seconds
+    StayPushedDuration = 2  # how long sensor will stay in 'pushed' state before going 'idle', in seconds
+    StayFinishedDuration = 3  # how long sensor will stay in 'finished' state before going 'idle', in seconds
 
     # Aspects of ObserverPattern
     AspectStateChanged = 'state'
@@ -199,11 +199,13 @@ class PushSensor(Observable):
         elif (self.state == PushSensor.StatePushed):
             if ((messageType == PushSensor.MessagePush)
                 or (messageType == PushSensor.MessageContinue)):
+                self.setState(PushSensor.StatePushed)
                 if (not self.successor): 
                     self.sendMessage(self.predecessor, PushSensor.MessageComplete)
                 else:
                     self.sendMessage(self.predecessor, PushSensor.MessageContinue)
             elif (messageType == PushSensor.MessageComplete):
+                self.setState(PushSensor.StatePushed)
                 if (self.predecessor):
                     self.sendMessage(self.predecessor, PushSensor.MessageComplete)
                 else:  # no predecessor, this is the first sensor
