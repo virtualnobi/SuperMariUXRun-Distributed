@@ -46,8 +46,6 @@ class PushSensor(Observable):
     
 
 # Constants
-    Logger = logging.getLogger(__name__)
-    
     # States of the push sensor 
     StateIdle = 'idle'  # waits for a push
     StatePushed = 'pushed'  # has been pushed, waits for continue/complete message from successor
@@ -62,6 +60,7 @@ class PushSensor(Observable):
     # Timings
     StayPushedDuration = 2  # how long sensor will stay in 'pushed' state before going 'idle', in seconds
     StayFinishedDuration = 3  # how long sensor will stay in 'finished' state before going 'idle', in seconds
+    MaxSendDelay = 0.5  # maximum simulated delay to send message
 
     # Aspects of ObserverPattern
     AspectStateChanged = 'state'
@@ -70,14 +69,6 @@ class PushSensor(Observable):
 
 # Class Variables
 # Class Methods
-    @classmethod
-    def classMethod(clas):
-        """
-        """
-        pass
-
-
-
 # Lifecycle
     def __init__(self, name, predecessor=None, successor=None):
         """
@@ -90,6 +81,7 @@ class PushSensor(Observable):
         self.successor = successor
         self.state = PushSensor.StateIdle
         self.timer = None
+        self.logger = None
 
 
 
@@ -138,6 +130,13 @@ class PushSensor(Observable):
         self.timer.start()
 
 
+    def setLogger(self, logger):
+        """
+        """
+        self.logger = logger
+
+
+
 # Getters
     def getName(self):
         return(self.name)
@@ -170,23 +169,23 @@ class PushSensor(Observable):
         """
         if (receiver):
             delay = (random.randint(1, 100) / 1000)
-            print('PushSensor %s: Sending %s to %s with delay %s' %(self.name, messageType, receiver.getName(), delay))
+            self.log('%s: Sending %s to %s with delay %s' %(self.name, messageType, receiver.getName(), delay))
             now = datetime.now()
             def send():
                 receiver.receiveMessage(self, messageType, now)
             Timer(delay, send).start()
         else:
-            print('PushSensor %s: Not sending "%s" because no receiver given' % (self.getName(), messageType))
+            self.log('%s: Not sending "%s" because no receiver given' % (self.getName(), messageType))
 
 
     def receiveMessage(self, sender, messageType, timestamp):  # @UnusedVariable
         """
         """
         if (not messageType in [PushSensor.MessagePush, PushSensor.MessageContinue, PushSensor.MessageComplete, PushSensor.MessageConfirm]):
-                assert False, ('PushSensor %n: Received illegal message type %s' % (self.name, messageType))             
-        print('PushSensor %s: Received %s from %s' % (self.name, 
-                                                      messageType, 
-                                                      sender.getName() if (sender) else 'None'))
+                assert False, ('%n: Received illegal message type %s' % (self.name, messageType))             
+        self.log('%s: Received %s from %s' % (self.name, 
+                                              messageType, 
+                                              sender.getName() if (sender) else 'None'))
         if (self.state == PushSensor.StateIdle):
             if (messageType == PushSensor.MessagePush):
                 self.setState(PushSensor.StatePushed)
@@ -195,7 +194,7 @@ class PushSensor(Observable):
                 else:
                     self.sendMessage(self.predecessor, PushSensor.MessageContinue)
             else:
-                print('PushSensor %s: Ignoring %s in state %s' % (self.name, messageType, self.state))
+                self.log('%s: Ignoring %s in state %s' % (self.name, messageType, self.state))
         elif (self.state == PushSensor.StatePushed):
             if ((messageType == PushSensor.MessagePush)
                 or (messageType == PushSensor.MessageContinue)):
@@ -215,15 +214,24 @@ class PushSensor(Observable):
                 self.setState(PushSensor.StateFinished)
                 self.sendMessage(self.successor, PushSensor.MessageConfirm)
         elif (self.state == PushSensor.StateFinished):
-            print('PushSensor %s: Ignoring %s in state %s' % (self.name, messageType, self.state))
+            self.log('%s: Ignoring %s in state %s' % (self.name, messageType, self.state))
         else: 
-            assert False, ('PushSensor %s: In illegal state %s' % (self.name, self.state))
+            assert False, ('%s: In illegal state %s' % (self.name, self.state))
         if (not (self.successor or self.predecessor)):
-            assert False, ('PushSensor %s: Neither successor nor predecessor, where did the %s come from?' % (self.name, messageType))
+            assert False, ('%s: Neither successor nor predecessor defined, where did the %s come from?' % (self.name, messageType))
 
 
 
 # Internal - to change without notice
+    def log(self, message):
+        """Log the message if a logger was set using self.setLogger()
+        
+        String message
+        """
+        if (self.logger):
+            self.logger.info(message)
+
+
 # Class Initialization
 pass
 

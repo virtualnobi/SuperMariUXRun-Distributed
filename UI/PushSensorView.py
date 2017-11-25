@@ -14,10 +14,9 @@ from datetime import datetime
 import os.path
 ## Contributed
 import wx
-import wx.lib.scrolledpanel
-import wx.animate
 ## nobi
 from nobi.ObserverPattern import Observer
+from nobi2.logging.handlers import wxTextCtrlHandler   
 ## Project
 from model.PushSensor import PushSensor
 import UI  # to access UI.PackagePath
@@ -50,23 +49,8 @@ class PushSensorView(wx.Panel, Observer):
     
 
 # Constants
-    Logger = logging.getLogger(__name__)
-    ConstantName = 'value'
-
-
 # Class Variables
-
-
-
 # Class Methods
-    @classmethod
-    def classMethod(clas):
-        """
-        """
-        pass
-
-
-
 # Lifecycle
     def __init__(self, parent, aPushSensor):
         """
@@ -83,17 +67,17 @@ class PushSensorView(wx.Panel, Observer):
 #        self.fireworks = wx.animate.Animation(os.path.join(UI.PackagePath, 'smallFireworks.gif'))
 #        self.stateVisualization = None
         # layout view
-        self.outOfSightSizer = wx.BoxSizer()  
+#        self.outOfSightSizer = wx.BoxSizer()  
         s = wx.GridBagSizer(vgap=10, hgap=10)
         s.Add((1, 130), (2, 0))
-        s.Add((130, 1), (0, 2))
-        s.Add((1, 1), (5, 3))
-        s.Add(wx.StaticText(self, -1, self.model.getName()), (1,1))
+        s.Add((130, 1), (0, 2), flag=wx.ALL, border=10)
+        s.Add((1, 1), (5, 3))  # add a pixel to bottom right corner to get gap also to the bottom and right
+        s.Add(wx.StaticText(self, -1, self.model.getName()), (1,1), flag=(wx.ALL | wx.ALIGN_CENTER), border=5)
         self.stateView = wx.StaticBitmap(self, -1, self.ImageLEDOff)
-        s.Add(self.stateView, (1, 2), (2, 1))
+        s.Add(self.stateView, (1, 2), (2, 1), flag=wx.ALIGN_CENTER_HORIZONTAL)
 #         self.outOfSightSizer.Add(self.ledView)
         self.stateText = wx.StaticText(self, -1, '')
-        s.Add(self.stateText, (2, 1))
+        s.Add(self.stateText, (2, 1), flag=(wx.ALIGN_CENTER), border=5)
 #         self.fireworksView = wx.animate.AnimationCtrl(self, -1, self.fireworks)
 #         self.fireworksView.SetUseWindowBackgroundColour()
 #         self.fireworksView.Play()
@@ -101,31 +85,23 @@ class PushSensorView(wx.Panel, Observer):
         self.pushButton = wx.Button(self, -1, 'Push')
         self.Bind(wx.EVT_BUTTON, self.onPush, self.pushButton)
         s.Add(self.pushButton, (3, 1), (1, 2), wx.EXPAND)
-        logPane = wx.lib.scrolledpanel.ScrolledPanel(self, -1)
-        self.logText = wx.StaticText(logPane, -1, '(empty log)')
-        s.Add(logPane, (4, 1), (1, 2))
+        self.logCtrl = wx.TextCtrl(self, -1, style=(wx.TE_MULTILINE | wx.TE_READONLY))
+        s.Add(self.logCtrl, (4, 1), (1, 2), flag=(wx.EXPAND | wx.ALIGN_CENTER | wx.ALL), border=1)
+        s.AddGrowableRow(4)
+        s.AddGrowableCol(1)
         self.SetSizer(s)
         # 
+        logger = logging.getLogger(self.model.getName())
+        logger.setLevel(logging.DEBUG)
+        handler = wxTextCtrlHandler(self.logCtrl)
+        logger.addHandler(handler)
+        self.model.setLogger(logger)
         self.updateAspect(self.model, PushSensor.AspectStateChanged)
 
 
 
 # Setters
-    def setAttribute(self, value):
-        """
-        """
-        pass
-    
-    
-
 # Getters
-    def getAttribute(self):  # inherited from SuperClass
-        """
-        """
-        pass
-    
-    
-
 # Event Handlers
     def updateAspect(self, observable, aspect):
         """
@@ -188,14 +164,7 @@ class PushSensorView(wx.Panel, Observer):
 # Inheritance - Superclass
 # Other API Functions
 # Internal - to change without notice
-    pass
-
-
 # Class Initialization
-pass
-
-
-
 # Executable Script
 if __name__ == "__main__":
     pass
